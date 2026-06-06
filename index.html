@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake Blade Ball</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="game" width="800" height="600"></canvas>
+
+    <div id="hud">
+      <div class="stat"><span class="label">SKOR</span><span id="score">0</span></div>
+      <div class="stat"><span class="label">PARRY</span><span id="parries">0</span></div>
+      <div class="stat"><span class="label">HIZ</span><span id="speed">1.0x</span></div>
+    </div>
+
+    <div id="overlay" class="active">
+      <div class="panel">
+        <h1>FAKE BLADE BALL</h1>
+        <p class="tagline">Murat Kaan Game Center</p>
+        <ul class="controls">
+          <li><b>WASD / Ok tuşları</b> — Hareket</li>
+          <li><b>SPACE</b> — Parry (topu savuştur)</li>
+          <li>Top üstüne gelirken doğru zamanda parry yap. Kaçırırsan ölürsün!</li>
+        </ul>
+        <button id="start-btn">BAŞLA</button>
+        <p class="best">En iyi skor: <span id="best">0</span></p>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
