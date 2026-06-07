@@ -6,12 +6,18 @@ Blade Ball tarzı, tarayıcıda çalışan bir refleks oyunu. Ölümcül top sü
 üstüne homing yapar; doğru zamanda **parry** ederek savuşturursun. Her parry'de
 top hızlanır. Kaçırırsan oyun biter.
 
+## 🎮 Oyna (online)
+
+**https://fegem.github.io/Fake_blade_ball/**
+
+Telefon, tablet veya bilgisayardan tarayıcıda açılır; kurulum gerekmez.
+
 ## Nasıl oynanır
 
-| Tuş | Aksiyon |
-| --- | --- |
-| `WASD` / Ok tuşları | Hareket |
-| `SPACE` (veya tıkla/dokun) | Parry — topu savuştur |
+| Platform | Hareket | Parry |
+| --- | --- | --- |
+| 💻 Bilgisayar | `WASD` / Ok tuşları | `SPACE` (veya tıkla) |
+| 📱 Telefon | Sol başparmak (sanal joystick) | Sağ alttaki **PARRY** butonu |
 
 - Top üstüne gelirken doğru anda parry yap.
 - Her başarılı parry skoru ve top hızını artırır.
