@@ -6,6 +6,7 @@ Tüm sprint'lerin kaydı. Yeni sprint açıldıkça buraya eklenir.
 | ------ | ----- | ----------- | -- |
 | Sprint 0 (bootstrap) | ✅ Kapandı | İlk oyun + sprint/CI altyapısı | #1 |
 | Sprint 1 | ✅ Kapandı | Çimen zemin + büyük alan + bulutlar + gerçekçi çim | #3 |
+| Sprint 2 | ✅ Kapandı | iOS/mobil dokunmatik kontroller + GitHub Pages linki | #4 |
 
 > Durum: 🟢 Açık · ✅ Kapandı
 
