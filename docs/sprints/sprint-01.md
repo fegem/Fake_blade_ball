@@ -1,8 +1,8 @@
 # Sprint 1
 
 - **Başlangıç:** 2026-06-07
-- **Bitiş:** —
-- **Durum:** 🟢 Açık
+- **Bitiş:** 2026-06-07
+- **Durum:** ✅ Kapandı
 - **Branch:** `claude/tender-allen-lAj0R`
 - **PR:** #3
 
@@ -29,4 +29,7 @@
 
 ## Kapanış özeti
 
-(Sprint kapanırken doldurulacak.)
+Tüm hedefler tamamlandı: çimen zemin, büyütülmüş oyun alanı (1100×760),
+sürüklenen bulutlar ve gerçekçi çim dokusu (degrade + organik lekeler + çim
+tutamları + çiçekler + vinyet). Ana döngü kalıcı hale getirildi. CI yeşil,
+PR #3 main'e merge edildi.

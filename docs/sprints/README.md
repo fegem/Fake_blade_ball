@@ -5,7 +5,7 @@ Tüm sprint'lerin kaydı. Yeni sprint açıldıkça buraya eklenir.
 | Sprint | Durum | Hedef özeti | PR |
 | ------ | ----- | ----------- | -- |
 | Sprint 0 (bootstrap) | ✅ Kapandı | İlk oyun + sprint/CI altyapısı | #1 |
-| Sprint 1 | 🟢 Açık | Çimen zemin + oyun alanını büyütme | #3 |
+| Sprint 1 | ✅ Kapandı | Çimen zemin + büyük alan + bulutlar + gerçekçi çim | #3 |
 
 > Durum: 🟢 Açık · ✅ Kapandı
 
