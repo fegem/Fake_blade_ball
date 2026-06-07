@@ -137,8 +137,7 @@
     resetGame();
     state.running = true;
     ui.overlay.classList.remove("active");
-    state.last = performance.now();
-    requestAnimationFrame(loop);
+    // Kalıcı döngü zaten çalışıyor; ayrıca rAF başlatmaya gerek yok.
   }
 
   function gameOver() {
@@ -268,15 +267,7 @@
     score += dt * 4;
 
     // --- Parçacıklar ---
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vx *= 0.92;
-      p.vy *= 0.92;
-      p.life -= dt * 1.8;
-      if (p.life <= 0) particles.splice(i, 1);
-    }
+    updateParticles(dt);
 
     if (shake > 0) shake = Math.max(0, shake - dt * 60);
 
@@ -297,8 +288,9 @@
       ctx.translate(rand(-shake, shake), rand(-shake, shake));
     }
 
-    // Çimen zemin
-    drawGrass();
+    // Çimen zemin (bir kez üretilmiş doku) + sürüklenen bulutlar
+    if (grassCanvas) ctx.drawImage(grassCanvas, 0, 0);
+    drawClouds();
 
     // Parçacıklar
     for (const p of particles) {
@@ -365,44 +357,141 @@
     ctx.restore();
   }
 
-  // Çimen zemin: biçilmiş çim kareleri + ince çim tutamları
-  function drawGrass() {
-    // Taban yeşil degrade
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#4a9e3f");
-    g.addColorStop(1, "#357a2e");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    // Biçilmiş çim deseni (dama tahtası tonları)
-    const tile = 56;
-    for (let ty = 0, ry = 0; ty < H; ty += tile, ry++) {
-      for (let tx = 0, rx = 0; tx < W; tx += tile, rx++) {
-        if ((rx + ry) % 2 === 0) {
-          ctx.fillStyle = "rgba(255,255,255,0.05)";
-          ctx.fillRect(tx, ty, tile, tile);
-        }
-      }
-    }
-
-    // Sabit dağılımlı çim tutamları (deterministik, titremesin diye)
-    ctx.strokeStyle = "rgba(30,90,25,0.5)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    let seed = 1337;
-    const rng = () => {
+  // Basit deterministik RNG üretici (titremeyen, sabit desenler için)
+  function makeRng(seed) {
+    return () => {
       seed = (seed * 9301 + 49297) % 233280;
       return seed / 233280;
     };
-    const blades = Math.floor((W * H) / 1400);
-    for (let i = 0; i < blades; i++) {
-      const bx = rng() * W;
-      const by = rng() * H;
-      const lean = (rng() - 0.5) * 3;
-      ctx.moveTo(bx, by);
-      ctx.lineTo(bx + lean, by - 4);
+  }
+
+  // Çimen dokusu: bir kez offscreen canvas'a çizilir, her karede drawImage ile basılır.
+  let grassCanvas = null;
+  function buildGrass() {
+    grassCanvas = document.createElement("canvas");
+    grassCanvas.width = W;
+    grassCanvas.height = H;
+    const g = grassCanvas.getContext("2d");
+    const rng = makeRng(2024);
+
+    // Taban dikey degrade (üst açık, alt koyu — derinlik)
+    const grd = g.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, "#56a647");
+    grd.addColorStop(1, "#2f6f28");
+    g.fillStyle = grd;
+    g.fillRect(0, 0, W, H);
+
+    // Organik renk lekeleri (açık/koyu yumuşak yamalar)
+    for (let i = 0; i < 160; i++) {
+      const x = rng() * W, y = rng() * H, r = 40 + rng() * 130;
+      const light = rng() > 0.5;
+      const rg = g.createRadialGradient(x, y, 0, x, y, r);
+      rg.addColorStop(0, light ? "rgba(130,200,95,0.16)" : "rgba(18,66,18,0.16)");
+      rg.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = rg;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
     }
-    ctx.stroke();
+
+    // Biçilmiş çim bantları (yatay, ince ton farkı)
+    const band = 72;
+    for (let y = 0, row = 0; y < H; y += band, row++) {
+      g.fillStyle = row % 2 === 0 ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.035)";
+      g.fillRect(0, y, W, band);
+    }
+
+    // Yoğun çim tutamları (iki tonlu, eğimli — gerçekçi doku)
+    const blades = Math.floor((W * H) / 240);
+    for (let i = 0; i < blades; i++) {
+      const x = rng() * W, y = rng() * H;
+      const h = 4 + rng() * 7;
+      const lean = (rng() - 0.5) * 4;
+      const shade = rng();
+      g.strokeStyle = shade > 0.66 ? "rgba(150,212,108,0.55)"
+        : shade > 0.33 ? "rgba(58,128,48,0.55)"
+        : "rgba(24,78,24,0.6)";
+      g.lineWidth = rng() > 0.85 ? 1.4 : 1;
+      g.beginPath();
+      g.moveTo(x, y);
+      g.quadraticCurveTo(x + lean * 0.5, y - h * 0.6, x + lean, y - h);
+      g.stroke();
+    }
+
+    // Serpiştirilmiş çiçekler
+    const flowerColors = ["#ffd34d", "#ff7eb6", "#fff4f4", "#b388ff"];
+    const flowers = Math.floor((W * H) / 9000);
+    for (let i = 0; i < flowers; i++) {
+      const x = rng() * W, y = rng() * H;
+      const col = flowerColors[Math.floor(rng() * flowerColors.length)];
+      g.fillStyle = col;
+      for (let p = 0; p < 5; p++) {
+        const a = (p / 5) * Math.PI * 2;
+        g.beginPath();
+        g.arc(x + Math.cos(a) * 2.2, y + Math.sin(a) * 2.2, 1.4, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.fillStyle = "#ffcf33";
+      g.beginPath(); g.arc(x, y, 1.3, 0, Math.PI * 2); g.fill();
+    }
+
+    // Kenar vinyet (hafif karartma — sahaya derinlik)
+    const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.7);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0,0.22)");
+    g.fillStyle = vg;
+    g.fillRect(0, 0, W, H);
+  }
+
+  // --- Bulutlar (sürüklenen) ---
+  const clouds = [];
+  function initClouds() {
+    clouds.length = 0;
+    const rng = makeRng(77);
+    const n = 6;
+    for (let i = 0; i < n; i++) {
+      clouds.push({
+        x: rng() * W,
+        y: rng() * H * 0.85,
+        scale: 0.7 + rng() * 1.0,
+        speed: 7 + rng() * 16,
+      });
+    }
+  }
+  function updateClouds(dt) {
+    for (const c of clouds) {
+      c.x += c.speed * dt;
+      const margin = 140 * c.scale;
+      if (c.x - margin > W) c.x = -margin;
+    }
+  }
+  function cloudShape(ox, oy) {
+    ctx.beginPath();
+    ctx.arc(ox - 28, oy + 6, 16, 0, Math.PI * 2);
+    ctx.arc(ox - 10, oy - 8, 23, 0, Math.PI * 2);
+    ctx.arc(ox + 14, oy - 3, 19, 0, Math.PI * 2);
+    ctx.arc(ox + 32, oy + 8, 15, 0, Math.PI * 2);
+    ctx.arc(ox + 4, oy + 13, 21, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawClouds() {
+    for (const c of clouds) {
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.scale(c.scale, c.scale);
+      // Çime düşen yumuşak gölge
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = "#0a3a08";
+      cloudShape(10, 18);
+      // Bulut gövdesi
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = "#ffffff";
+      cloudShape(0, 0);
+      // Alt taraf hafif gölgeli ton
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = "#d8e6f5";
+      cloudShape(0, 8);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
 
   // Yuvarlatılmış dikdörtgen (dolu)
@@ -502,36 +591,46 @@
     ctx.restore();
   }
 
+  function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.92;
+      p.vy *= 0.92;
+      p.life -= dt * 1.8;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+
   // ============================================================
-  //  Ana döngü
+  //  Ana döngü (kalıcı: menüde de bulutlar sürüklenir)
   // ============================================================
   function loop(now) {
     let dt = (now - state.last) / 1000;
     state.last = now;
     if (dt > 0.05) dt = 0.05; // büyük sıçramaları sınırla
 
+    updateClouds(dt);
+
     if (state.running) {
       update(dt);
+    } else {
+      // Oyun dışıyken (menü / ölüm sonrası) parçacıkları söndür
+      updateParticles(dt);
+      if (shake > 0) shake = Math.max(0, shake - dt * 60);
     }
-    draw();
 
-    if (state.running) requestAnimationFrame(loop);
-    else if (particles.length) {
-      // ölüm patlaması bitene kadar çizmeye devam et
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx * dt; p.y += p.vy * dt;
-        p.vx *= 0.92; p.vy *= 0.92;
-        p.life -= dt * 1.8;
-        if (p.life <= 0) particles.splice(i, 1);
-      }
-      requestAnimationFrame(loop);
-    }
+    draw();
+    requestAnimationFrame(loop);
   }
 
-  // İlk çizim (menü arkasında sahne görünsün)
+  // Sahneyi kur ve kalıcı döngüyü başlat
+  buildGrass();
+  initClouds();
   ball.x = W / 2; ball.y = 120;
-  draw();
+  state.last = performance.now();
+  requestAnimationFrame(loop);
 
   ui.startBtn.addEventListener("click", startGame);
 })();
