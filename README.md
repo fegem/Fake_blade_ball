@@ -1,5 +1,7 @@
 # Fake Blade Ball
 
+[![Deploy to GitHub Pages](https://github.com/fegem/Fake_blade_ball/actions/workflows/pages.yml/badge.svg)](https://github.com/fegem/Fake_blade_ball/actions/workflows/pages.yml)
+
 Murat Kaan Game Center
 
 Blade Ball tarzı, tarayıcıda çalışan bir refleks oyunu. Ölümcül top sürekli
