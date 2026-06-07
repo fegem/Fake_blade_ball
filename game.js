@@ -348,8 +348,8 @@
       ctx.stroke();
     }
 
-    // Oyuncu
-    glowCircle(player.x, player.y, PLAYER_RADIUS, "#4dd0ff", "#bff0ff");
+    // Oyuncu (ayı kafalı karakter avatarı)
+    drawPlayer(player.x, player.y);
 
     // Top (tehlike)
     glowCircle(ball.x, ball.y, BALL_RADIUS, ball.homing ? "#ff4d6d" : "#ffd24d", "#fff");
@@ -370,6 +370,103 @@
     ctx.beginPath();
     ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+
+  // Yuvarlatılmış dikdörtgen (dolu)
+  function fillRoundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+    }
+    ctx.fill();
+  }
+
+  // Oyuncu avatarı: ayı kafalı, kırmızı kapüşonlu, biri kırmızı/biri beyaz gözlü karakter
+  function drawPlayer(x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(0.92, 0.92);
+
+    // Yere düşen gölge
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.beginPath();
+    ctx.ellipse(0, 23, 13, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bacaklar (kot)
+    ctx.fillStyle = "#8aabd6";
+    fillRoundRect(-7.5, 7, 6, 15, 2);
+    fillRoundRect(1.5, 7, 6, 15, 2);
+    // Ayakkabılar (gri)
+    ctx.fillStyle = "#cfd2d7";
+    ctx.beginPath(); ctx.ellipse(-4.5, 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4.5, 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Kollar (kırmızı kapüşon)
+    ctx.fillStyle = "#cf2b2b";
+    fillRoundRect(-14.5, -4, 5, 12, 2.5);
+    fillRoundRect(9.5, -4, 5, 12, 2.5);
+    // Eller (kahverengi)
+    ctx.fillStyle = "#6b4a3a";
+    ctx.beginPath(); ctx.arc(-12, 9, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, 9, 2.6, 0, Math.PI * 2); ctx.fill();
+
+    // Gövde (kırmızı kapüşon)
+    ctx.fillStyle = "#d62828";
+    fillRoundRect(-11, -7, 22, 16, 5);
+    // Fermuar çizgisi
+    ctx.strokeStyle = "rgba(0,0,0,0.45)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(0, 9); ctx.stroke();
+
+    // --- Kafa ---
+    // Kulaklar
+    ctx.fillStyle = "#7a5a48";
+    ctx.beginPath(); ctx.arc(-8.5, -20, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8.5, -20, 4.5, 0, Math.PI * 2); ctx.fill();
+    // Yüz (krem)
+    ctx.fillStyle = "#e9dac2";
+    ctx.beginPath(); ctx.arc(0, -16, 10.5, 0, Math.PI * 2); ctx.fill();
+
+    // Siborg göz yaması (koyu)
+    ctx.fillStyle = "rgba(70,72,82,0.6)";
+    ctx.beginPath(); ctx.arc(-4.2, -17, 4.6, 0, Math.PI * 2); ctx.fill();
+    // Kırmızı parlayan göz
+    ctx.save();
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "#ff2b2b";
+    ctx.fillStyle = "#ff2b2b";
+    ctx.beginPath(); ctx.arc(-4.2, -17, 2.1, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Normal beyaz göz
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.arc(4.4, -17, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#222";
+    ctx.beginPath(); ctx.arc(4.4, -17, 1.1, 0, Math.PI * 2); ctx.fill();
+
+    // Burun
+    ctx.fillStyle = "#d0563b";
+    ctx.beginPath(); ctx.arc(0, -13, 1.6, 0, Math.PI * 2); ctx.fill();
+
+    // Sırıtan ağız (dişler)
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, -12.5, 4.2, 0.12 * Math.PI, 0.88 * Math.PI, false);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#3a2a22";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(0, -12.5, 4.6, 0.1 * Math.PI, 0.9 * Math.PI, false);
+    ctx.stroke();
+
     ctx.restore();
   }
 
