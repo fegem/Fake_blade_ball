@@ -21,16 +21,16 @@ html, body {
 
 #game-wrap {
   position: relative;
-  width: 800px;
+  width: 1100px;
   max-width: 100vw;
 }
 
 canvas {
   display: block;
   width: 100%;
-  background: #060912;
+  background: #3a7d34;
   border-radius: 12px;
-  box-shadow: 0 0 60px rgba(77, 208, 255, 0.15), inset 0 0 80px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 60px rgba(77, 208, 255, 0.15), inset 0 0 80px rgba(0, 0, 0, 0.4);
   touch-action: none;
 }
 

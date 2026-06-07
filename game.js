@@ -297,16 +297,8 @@
       ctx.translate(rand(-shake, shake), rand(-shake, shake));
     }
 
-    // Izgara arka plan
-    ctx.strokeStyle = "rgba(77,208,255,0.05)";
-    ctx.lineWidth = 1;
-    const grid = 40;
-    for (let x = 0; x <= W; x += grid) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-    }
-    for (let y = 0; y <= H; y += grid) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
+    // Çimen zemin
+    drawGrass();
 
     // Parçacıklar
     for (const p of particles) {
@@ -371,6 +363,46 @@
     ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+  }
+
+  // Çimen zemin: biçilmiş çim kareleri + ince çim tutamları
+  function drawGrass() {
+    // Taban yeşil degrade
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#4a9e3f");
+    g.addColorStop(1, "#357a2e");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Biçilmiş çim deseni (dama tahtası tonları)
+    const tile = 56;
+    for (let ty = 0, ry = 0; ty < H; ty += tile, ry++) {
+      for (let tx = 0, rx = 0; tx < W; tx += tile, rx++) {
+        if ((rx + ry) % 2 === 0) {
+          ctx.fillStyle = "rgba(255,255,255,0.05)";
+          ctx.fillRect(tx, ty, tile, tile);
+        }
+      }
+    }
+
+    // Sabit dağılımlı çim tutamları (deterministik, titremesin diye)
+    ctx.strokeStyle = "rgba(30,90,25,0.5)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    let seed = 1337;
+    const rng = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    const blades = Math.floor((W * H) / 1400);
+    for (let i = 0; i < blades; i++) {
+      const bx = rng() * W;
+      const by = rng() * H;
+      const lean = (rng() - 0.5) * 3;
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + lean, by - 4);
+    }
+    ctx.stroke();
   }
 
   // Yuvarlatılmış dikdörtgen (dolu)
