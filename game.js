@@ -393,8 +393,8 @@
     // Oyuncu (ayı kafalı karakter avatarı)
     drawPlayer(player.x, player.y);
 
-    // Top (tehlike)
-    glowCircle(ball.x, ball.y, BALL_RADIUS, ball.homing ? "#ff4d6d" : "#ffd24d", "#fff");
+    // Top (tehlike) — sırıtan nugget
+    drawBall(ball.x, ball.y);
 
     ctx.restore();
 
@@ -585,6 +585,77 @@
       ctx.restore();
     }
     ctx.globalAlpha = 1;
+  }
+
+  // Top yerine: sırıtan altın nugget karakteri
+  function drawBall(x, y) {
+    const r = BALL_RADIUS;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Tehlike parıltısı: homing iken kırmızı, savuşturulunca altın
+    ctx.save();
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = ball.homing ? "#ff4d4d" : "#ffd24d";
+    const grd = ctx.createLinearGradient(0, -r * 1.4, 0, r * 1.4);
+    grd.addColorStop(0, "#ffc846");
+    grd.addColorStop(1, "#e5901c");
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 1.05, r * 1.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Nugget kenar çizgisi
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#b9760f";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 1.05, r * 1.35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Gözler (büyük beyaz)
+    const eyeY = -r * 0.42, eyeDX = r * 0.45, eyeR = r * 0.46;
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "#1a1a1a";
+    for (const sx of [-1, 1]) {
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.ellipse(sx * eyeDX, eyeY, eyeR * 0.8, eyeR, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    // Göz bebekleri
+    ctx.fillStyle = "#111111";
+    for (const sx of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(sx * eyeDX, eyeY + r * 0.06, eyeR * 0.3, eyeR * 0.52, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Sırıtan ağız (siyah açıklık + üst sıra dişler)
+    const mY = r * 0.52, mW = r * 0.66, mH = r * 0.52;
+    ctx.fillStyle = "#161616";
+    ctx.beginPath();
+    ctx.ellipse(0, mY, mW, mH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, mY, mW, mH, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-mW, mY - mH, mW * 2, mH * 0.6);          // üst diş şeridi
+    ctx.fillRect(-mW * 0.5, mY + mH * 0.5, mW, mH * 0.5);  // alt diş
+    ctx.strokeStyle = "#161616";
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * (mW / 3), mY - mH);
+      ctx.lineTo(i * (mW / 3), mY - mH * 0.4);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.restore();
   }
 
   // Yuvarlatılmış dikdörtgen (dolu)
