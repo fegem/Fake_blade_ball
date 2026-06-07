@@ -32,20 +32,76 @@
   const PARRY_RADIUS = 64;           // parry yarıçapı
   const BEST_KEY = "fbb_best";
 
-  // --- Girdi ---
+  // --- Girdi: klavye + dokunmatik ---
   const keys = {};
   window.addEventListener("keydown", (e) => {
     const k = e.key.toLowerCase();
     keys[k] = true;
-    if (k === " " || k === "arrowup" || k === "arrowdown" || k === "arrowleft" || k === "arrowright") {
-      e.preventDefault();
-    }
+    if (k === " " || k.startsWith("arrow")) e.preventDefault();
     if (k === " ") tryParry();
   });
   window.addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
 
-  // Dokunmatik / fare: tıkla = parry
-  canvas.addEventListener("pointerdown", () => { if (state.running) tryParry(); });
+  // Dokunmatik cihaz mı?
+  const isTouch =
+    (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+    "ontouchstart" in window;
+
+  // Sanal joystick (sol yarı) + parry (sağ yarı / buton). Çoklu dokunuş.
+  const STICK_MAX = 70;
+  const stick = { id: null, ox: 0, oy: 0, x: 0, y: 0, dx: 0, dy: 0, mag: 0 };
+
+  function canvasPos(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - r.left) / r.width) * W,
+      y: ((e.clientY - r.top) / r.height) * H,
+    };
+  }
+
+  function onPointerDown(e) {
+    if (!state.running) return;          // menü/oyun sonu overlay butonuyla yönetilir
+    e.preventDefault();
+    // Fare: her tık = parry (masaüstü davranışı korunur)
+    if (e.pointerType === "mouse") { tryParry(); return; }
+    const p = canvasPos(e);
+    if (p.x < W * 0.5 && stick.id === null) {
+      // Sol yarı: hareket joystick'i
+      stick.id = e.pointerId;
+      stick.ox = stick.x = p.x;
+      stick.oy = stick.y = p.y;
+      stick.dx = stick.dy = stick.mag = 0;
+    } else {
+      // Sağ yarı (veya ikinci parmak): parry
+      tryParry();
+    }
+  }
+
+  function onPointerMove(e) {
+    if (stick.id !== e.pointerId) return;
+    e.preventDefault();
+    const p = canvasPos(e);
+    let dx = p.x - stick.ox, dy = p.y - stick.oy;
+    const d = Math.hypot(dx, dy);
+    if (d > STICK_MAX) { dx = (dx / d) * STICK_MAX; dy = (dy / d) * STICK_MAX; }
+    stick.x = stick.ox + dx;
+    stick.y = stick.oy + dy;
+    stick.dx = dx / STICK_MAX;
+    stick.dy = dy / STICK_MAX;
+    stick.mag = Math.min(1, d / STICK_MAX);
+  }
+
+  function onPointerUp(e) {
+    if (stick.id === e.pointerId) {
+      stick.id = null;
+      stick.dx = stick.dy = stick.mag = 0;
+    }
+  }
+
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", onPointerUp);
 
   // --- Oyun durumu ---
   let best = Number(localStorage.getItem(BEST_KEY) || 0);
@@ -221,6 +277,8 @@
     if (keys["s"] || keys["arrowdown"]) iy += 1;
     const il = len(ix, iy);
     if (il > 0) { ix /= il; iy /= il; }
+    // Dokunmatik joystick klavyeyi ezer (analog)
+    if (stick.id !== null && stick.mag > 0.08) { ix = stick.dx; iy = stick.dy; }
     player.x += ix * PLAYER_SPEED * dt;
     player.y += iy * PLAYER_SPEED * dt;
     player.x = Math.max(PLAYER_RADIUS, Math.min(W - PLAYER_RADIUS, player.x));
@@ -339,6 +397,41 @@
     glowCircle(ball.x, ball.y, BALL_RADIUS, ball.homing ? "#ff4d6d" : "#ffd24d", "#fff");
 
     ctx.restore();
+
+    // Dokunmatik kontroller (ekrana sabit, sarsıntıdan etkilenmez)
+    drawTouchControls();
+  }
+
+  function drawTouchControls() {
+    if (!isTouch || !state.running) return;
+
+    // Joystick (yalnızca dokunulduğunda)
+    if (stick.id !== null) {
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); ctx.arc(stick.ox, stick.oy, STICK_MAX, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.arc(stick.x, stick.y, STICK_MAX * 0.45, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Parry butonu (sağ alt — görsel ipucu; sağ yarıya basmak da parry yapar)
+    const bx = W - 95, by = H - 95, br = 56;
+    const ready = parry.cooldown <= 0;
+    ctx.globalAlpha = ready ? 1 : 0.4;
+    ctx.fillStyle = "rgba(77,208,255,0.28)";
+    ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#4dd0ff";
+    ctx.stroke();
+    ctx.fillStyle = "#eaffff";
+    ctx.font = "bold 20px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("PARRY", bx, by);
+    ctx.textAlign = "start";
+    ctx.textBaseline = "alphabetic";
+    ctx.globalAlpha = 1;
   }
 
   function glowCircle(x, y, r, color, core) {
