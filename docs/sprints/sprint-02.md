@@ -1,8 +1,8 @@
 # Sprint 2
 
 - **Başlangıç:** 2026-06-07
-- **Bitiş:** —
-- **Durum:** 🟢 Açık
+- **Bitiş:** 2026-06-07
+- **Durum:** ✅ Kapandı
 - **Branch:** `claude/tender-allen-lAj0R`
 - **PR:** #4
 
@@ -26,4 +26,7 @@
 
 ## Kapanış özeti
 
-(Sprint kapanırken doldurulacak.)
+iOS/mobil dokunmatik kontroller (sanal joystick + parry butonu) ve responsive
+ekran eklendi; masaüstü klavye/fare korundu. GitHub Pages deploy workflow'u ile
+oyun `https://fegem.github.io/Fake_blade_ball/` adresinde yayınlandı. CI yeşil,
+PR #4 main'e merge edildi.
